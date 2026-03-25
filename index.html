@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教師最佳請假計算器 ✨ AI 增強版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto+Sans+TC', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .input-control {
+            width: 100%;
+            padding: 0.4rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+        .highlight-val {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: block;
+        }
+        .advice-box {
+            border-radius: 0.75rem;
+            padding: 1rem;
+            border-width: 1px;
+            flex: 1;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        /* AI Loading animation */
+        .typing-loader {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+            margin: 0 2px;
+            animation: typing 1s infinite ease-in-out;
+        }
+        .typing-loader:nth-child(2) { animation-delay: 0.2s; }
+        .typing-loader:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+    <div class="max-w-[1400px] mx-auto">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-blue-900 mb-1">教師最佳請假計算器 <span class="text-blue-500">✨ AI</span></h1>
+            <p class="text-gray-600 text-sm">單位：日/時 (8時=1日) | 整合 Gemini AI 法規諮詢</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- 左側：輸入已請假時數 -->
+            <div class="lg:col-span-4 card p-5 self-start">
+                <h2 class="text-lg font-bold mb-4 flex items-center text-gray-800 border-b pb-2">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    輸入本學期已請時數
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-12 gap-2 text-xs font-bold text-gray-500 px-1">
+                        <div class="col-span-6">假別名稱</div>
+                        <div class="col-span-3 text-center">日</div>
+                        <div class="col-span-3 text-center">時</div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center bg-blue-50 p-2 rounded-lg">
+                        <div class="col-span-6 text-sm font-medium text-blue-700">1. 一般事假 (計入考核)</div>
+                        <div class="col-span-3"><input type="number" id="cas_d" class="input-control" value="0" min="0"></div>
+                        <div class="col-span-3"><input type="number" id="cas_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center bg-orange-50 p-2 rounded-lg">
+                        <div class="col-span-6 text-sm font-medium text-orange-700">2. 病假 (不含生理)</div>
+                        <div class="col-span-3"><input type="number" id="sick_d" class="input-control" value="0" min="0"></div>
+                        <div class="col-span-3"><input type="number" id="sick_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border border-dashed border-gray-200">
+                        <div class="col-span-6 text-sm font-medium text-gray-700 italic">3. 身心調適假 (3日)</div>
+                        <div class="col-span-3"><input type="number" id="men_d" class="input-control" value="0" min="0" max="3"></div>
+                        <div class="col-span-3"><input type="number" id="men_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border border-dashed border-gray-200">
+                        <div class="col-span-6 text-sm font-medium text-gray-700 italic">4. 家庭照顧假 (7日)</div>
+                        <div class="col-span-3"><input type="number" id="fam_d" class="input-control" value="0" min="0" max="7"></div>
+                        <div class="col-span-3"><input type="number" id="fam_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center bg-pink-50 p-2 rounded-lg">
+                        <div class="col-span-6 text-sm font-medium text-pink-700">5. 生理假 (每月1日)</div>
+                        <div class="col-span-3"><input type="number" id="per_d" class="input-control" value="0" min="0"></div>
+                        <div class="col-span-3"><input type="number" id="per_h" class="input-control" value="0" min="0"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2 mt-6">
+                    <button onclick="calculate()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-lg shadow transition duration-200">
+                        更新計算結果
+                    </button>
+                    <button onclick="askGeminiAdvice()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow transition duration-200 flex items-center justify-center">
+                        ✨ AI 假別策略諮詢
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右側：結果與統計 -->
+            <div class="lg:col-span-8 space-y-6">
+                <!-- 數據面板 -->
+                <div class="card p-5 border-t-4 border-blue-600">
+                    <h2 class="text-lg font-bold mb-4 text-gray-800">已請假別統計</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <div class="text-blue-800 text-xs font-bold mb-1">支薪合計 (7日扣薪線)</div>
+                            <span id="res-pay-casual" class="highlight-val text-blue-900">0 日 0 時</span>
+                            <div id="pay-status" class="mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block"></div>
+                        </div>
+
+                        <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                            <div class="text-orange-800 text-xs font-bold mb-1">考核：事病核計 (14日線)</div>
+                            <span id="res-merit-total" class="highlight-val text-orange-900">0 日 0 時</span>
+                            <div id="merit-status" class="mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block"></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-gray-700 text-xs font-bold mb-1">純病假合計 (28日上限)</div>
+                            <span id="res-sick-only" class="highlight-val text-gray-900">0 日 0 時</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI 建議區塊 -->
+                <div id="ai-advice-panel" class="hidden card p-5 border-t-4 border-indigo-500 bg-indigo-50/30">
+                    <h2 class="text-lg font-bold mb-3 text-indigo-900 flex items-center">
+                        <span class="mr-2">✨</span> AI 專屬策略建議
+                    </h2>
+                    <div id="ai-loading" class="hidden py-4 text-center">
+                        <div class="typing-loader"></div>
+                        <div class="typing-loader"></div>
+                        <div class="typing-loader"></div>
+                        <p class="text-xs text-indigo-400 mt-2">Gemini 正在分析您的請假狀況與法規...</p>
+                    </div>
+                    <div id="ai-content" class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
+                </div>
+
+                <!-- 最佳建議區塊 -->
+                <div class="card p-5 border-t-4 border-yellow-500">
+                    <h2 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        系統預設請假建議
+                    </h2>
+                    <div id="advice-container" class="flex flex-col md:flex-row gap-4 overflow-x-auto pb-2">
+                        <p class="italic text-gray-400 text-center w-full">請點擊計算...</p>
+                    </div>
+                </div>
+
+                <!-- AI Q&A 面板 -->
+                <div class="card p-5 border-t-4 border-cyan-500">
+                    <h2 class="text-lg font-bold mb-3 text-cyan-900 flex items-center">
+                        <span class="mr-2">💬</span> ✨ AI 考績法規諮詢
+                    </h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="ai-question" placeholder="例如：身心調適假要檢附證明嗎？會扣日薪嗎？" class="flex-1 p-2 border rounded-lg text-sm">
+                        <button onclick="askGeminiQuestion()" class="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow">
+                            詢問 ✨
+                        </button>
+                    </div>
+                    <div id="ai-answer" class="mt-4 hidden p-3 bg-white border rounded-lg text-sm text-gray-600 italic border-cyan-100">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; // Gemini API key provided by environment
+
+        function getVal(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        function formatDH(totalHours) {
+            const d = Math.floor(totalHours / 8);
+            const h = totalHours % 8;
+            return `${d} 日 ${h} 時`;
+        }
+
+        function calculate() {
+            const casualH = (getVal('cas_d') * 8) + getVal('cas_h');
+            const sickH = (getVal('sick_d') * 8) + getVal('sick_h');
+            const mentalH = (getVal('men_d') * 8) + getVal('men_h');
+            const familyH = (getVal('fam_d') * 8) + getVal('fam_h');
+            const periodH = (getVal('per_d') * 8) + getVal('per_h');
+
+            const totalPayCasualH = casualH + familyH + mentalH;
+            const periodBonusH = Math.min(periodH, 24);
+            const periodToSickH = Math.max(0, periodH - 24);
+            const totalSickH = sickH + periodToSickH;
+            const meritTotalH = casualH + totalSickH;
+
+            document.getElementById('res-pay-casual').innerText = formatDH(totalPayCasualH);
+            document.getElementById('res-merit-total').innerText = formatDH(meritTotalH);
+            document.getElementById('res-sick-only').innerText = formatDH(totalSickH);
+
+            const payStatus = document.getElementById('pay-status');
+            if (totalPayCasualH <= 56) {
+                payStatus.innerText = "✓ 薪給：目前不扣薪";
+                payStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-green-100 text-green-700 border border-green-200";
+            } else {
+                payStatus.innerText = "✕ 薪給：已開始扣薪";
+                payStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-red-100 text-red-700 border border-red-200";
+            }
+
+            const meritStatus = document.getElementById('merit-status');
+            if (meritTotalH <= 112 && totalSickH <= 224) {
+                meritStatus.innerText = "✓ 考核：符合4條1款";
+                meritStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-blue-100 text-blue-700 border border-blue-200";
+            } else {
+                meritStatus.innerText = "✕ 考核：超標警告";
+                meritStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-orange-100 text-orange-700 border border-orange-200";
+            }
+
+            // 系統預設建議
+            updateAdvice(totalPayCasualH, mentalH, familyH, periodBonusH, meritTotalH);
+        }
+
+        function updateAdvice(totalPayCasualH, mentalH, familyH, periodBonusH, meritTotalH) {
+            const maxFreeH = 56;
+            let adviceHtml = "";
+            const remMentalLawH = Math.max(0, 24 - mentalH);
+            const remMentalFreeH = Math.min(remMentalLawH, Math.max(0, maxFreeH - totalPayCasualH));
+            
+            if (remMentalFreeH > 0) {
+                adviceHtml += `<div class="advice-box bg-green-50 border-green-200"><div><span class="text-green-800 font-bold block mb-1 text-xs">🥇 第一優先：身心調適假</span><span class="text-lg font-bold text-green-700">${formatDH(remMentalFreeH)}</span></div><p class="text-[10px] text-green-600 mt-2">不扣薪、不計考核且有代課補助。</p></div>`;
+            }
+
+            const remFamilyLawH = Math.max(0, 56 - familyH);
+            const remFamilyFreeH = Math.min(remFamilyLawH, Math.max(0, maxFreeH - totalPayCasualH));
+            if (remFamilyFreeH > 0) {
+                adviceHtml += `<div class="advice-box bg-purple-50 border-purple-200"><div><span class="text-purple-800 font-bold block mb-1 text-xs">🥈 不扣薪首選：家照假</span><span class="text-lg font-bold text-purple-700">${formatDH(remFamilyFreeH)}</span></div><p class="text-[10px] text-purple-600 mt-2">不計入考核且不扣薪。</p></div>`;
+            }
+
+            const remPeriodBonusH = Math.max(0, 24 - periodBonusH);
+            if (remPeriodBonusH > 0) {
+                adviceHtml += `<div class="advice-box bg-pink-50 border-pink-200"><div><span class="text-pink-800 font-bold block mb-1 text-xs">🥉 考核紅利：生理假</span><span class="text-lg font-bold text-pink-700">${formatDH(remPeriodBonusH)}</span></div><p class="text-[10px] text-pink-600 mt-2">前3日不計入考核病假。</p></div>`;
+            }
+
+            document.getElementById('advice-container').innerHTML = adviceHtml || '<p class="text-gray-400 text-center w-full">目前尚無額外不扣薪假別建議。</p>';
+        }
+
+        // --- Gemini AI 集成功能 ---
+
+        async function fetchGemini(prompt, systemInstruction = "") {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    return result.candidates?.[0]?.content?.parts?.[0]?.text || "抱歉，我暫時無法回報，請稍後再試。";
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                }
+            }
+            return "連線失敗，請檢查網路設定。";
+        }
+
+        async function askGeminiAdvice() {
+            const panel = document.getElementById('ai-advice-panel');
+            const loading = document.getElementById('ai-loading');
+            const content = document.getElementById('ai-content');
+            
+            panel.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.innerText = "";
+
+            const data = {
+                cas: formatDH((getVal('cas_d') * 8) + getVal('cas_h')),
+                sick: formatDH((getVal('sick_d') * 8) + getVal('sick_h')),
+                men: formatDH((getVal('men_d') * 8) + getVal('men_h')),
+                fam: formatDH((getVal('fam_d') * 8) + getVal('fam_h')),
+                totalPay: document.getElementById('res-pay-casual').innerText,
+                totalMerit: document.getElementById('res-merit-total').innerText
+            };
+
+            const systemPrompt = "你是一位精通台灣教師請假規則與成績考核辦法的專家。你會根據用戶提供的請假時數，給出人性化的『請假策略諮詢』。請特別關注 115 年新制的身心調適假、家庭照顧假與事假的相互關係，並提醒使用者如何保住考核四條一款（14天紅線）。回應請保持專業、親切且簡潔。";
+            const userPrompt = `目前我的請假狀況：
+            一般事假：${data.cas}
+            病假：${data.sick}
+            身心調適假：${data.men}
+            家庭照顧假：${data.fam}
+            支薪事假合計：${data.totalPay} (上限7天)
+            考核總計：${data.totalMerit} (上限14天)
+            請給我針對「不扣薪」與「考核安全」的專業建議與策略。`;
+
+            const advice = await fetchGemini(userPrompt, systemPrompt);
+            loading.classList.add('hidden');
+            content.innerText = advice;
+        }
+
+        async function askGeminiQuestion() {
+            const questionInput = document.getElementById('ai-question');
+            const answerBox = document.getElementById('ai-answer');
+            const question = questionInput.value.trim();
+            
+            if (!question) return;
+
+            answerBox.innerText = "✨ AI 思考中...";
+            answerBox.classList.remove('hidden');
+
+            const systemPrompt = "你是一位台灣教師法律顧問。請針對用戶關於教師請假、考績、薪給的問題提供精確的法律解釋。特別注意：1. 身心調適假為114/115年新制，每年3天。2. 事假、家照、調適假合計7天內不扣薪。3. 生理假每月1天。請用條列式或簡短文字回答。";
+            
+            const response = await fetchGemini(question, systemPrompt);
+            answerBox.innerText = response;
+        }
+
+        window.onload = calculate;
+    </script>
+</body>
+</html>
