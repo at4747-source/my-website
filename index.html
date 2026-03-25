@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教師最佳請假計算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto+Sans+TC', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .input-control {
+            width: 100%;
+            padding: 0.4rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            text-align: center;
+        }
+        .highlight-val {
+            font-size: 1.15rem;
+            font-weight: 700;
+            display: block;
+        }
+        .advice-box {
+            border-radius: 0.75rem;
+            padding: 1rem;
+            border-width: 1px;
+            flex: 1;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+    <div class="max-w-[1400px] mx-auto">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-bold text-blue-900 mb-1">教師最佳請假計算器</h1>
+            <p class="text-gray-600 text-sm">單位：日/時 (8時=1日) | 依據 115 最新考核辦法修正</p>
+        </header>
+
+        <!-- 主容器 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- 左側：輸入已請假時數 -->
+            <div class="lg:col-span-4 card p-5 self-start">
+                <h2 class="text-lg font-bold mb-4 flex items-center text-gray-800 border-b pb-2">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    輸入已請假時數
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-12 gap-2 text-xs font-bold text-gray-500 px-1">
+                        <div class="col-span-6">假別名稱</div>
+                        <div class="col-span-3 text-center">日</div>
+                        <div class="col-span-3 text-center">時</div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center bg-blue-50 p-2 rounded-lg">
+                        <div class="col-span-6 text-sm font-medium text-blue-700">1. 一般事假 (計入考核)</div>
+                        <div class="col-span-3"><input type="number" id="cas_d" class="input-control" value="0" min="0"></div>
+                        <div class="col-span-3"><input type="number" id="cas_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center bg-orange-50 p-2 rounded-lg">
+                        <div class="col-span-6 text-sm font-medium text-orange-700">2. 病假 (不含生理)</div>
+                        <div class="col-span-3"><input type="number" id="sick_d" class="input-control" value="0" min="0"></div>
+                        <div class="col-span-3"><input type="number" id="sick_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border border-dashed border-gray-200">
+                        <div class="col-span-6 text-sm font-medium text-gray-700 italic">3. 身心調適假 (3日)</div>
+                        <div class="col-span-3"><input type="number" id="men_d" class="input-control" value="0" min="0" max="3"></div>
+                        <div class="col-span-3"><input type="number" id="men_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-lg border border-dashed border-gray-200">
+                        <div class="col-span-6 text-sm font-medium text-gray-700 italic">4. 家庭照顧假 (7日)</div>
+                        <div class="col-span-3"><input type="number" id="fam_d" class="input-control" value="0" min="0" max="7"></div>
+                        <div class="col-span-3"><input type="number" id="fam_h" class="input-control" value="0" min="0"></div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-2 items-center bg-pink-50 p-2 rounded-lg">
+                        <div class="col-span-6 text-sm font-medium text-pink-700">5. 生理假 (每月1日)</div>
+                        <div class="col-span-3"><input type="number" id="per_d" class="input-control" value="0" min="0"></div>
+                        <div class="col-span-3"><input type="number" id="per_h" class="input-control" value="0" min="0"></div>
+                    </div>
+                </div>
+
+                <button onclick="calculate()" class="w-full mt-6 bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-lg shadow transition duration-200">
+                    更新計算
+                </button>
+            </div>
+
+            <!-- 右側：結果與統計 -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- 已請假別統計 -->
+                <div class="card p-5 border-t-4 border-blue-600">
+                    <h2 class="text-lg font-bold mb-4 text-gray-800">已請假別統計 (自動進位)</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <div class="text-blue-800 text-xs font-bold mb-1">支薪合計 (7日扣薪線)</div>
+                            <span id="res-pay-casual" class="highlight-val text-blue-900">0 日 0 時</span>
+                            <p class="text-[10px] text-blue-400 mt-1">一般事+家照+身心調適</p>
+                            <div id="pay-status" class="mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block"></div>
+                        </div>
+
+                        <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                            <div class="text-orange-800 text-xs font-bold mb-1">考核：事病核計 (14日線)</div>
+                            <span id="res-merit-total" class="highlight-val text-orange-900">0 日 0 時</span>
+                            <p class="text-[10px] text-orange-400 mt-1">一般事假+病假(排除家/調)</p>
+                            <div id="merit-status" class="mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block"></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-gray-700 text-xs font-bold mb-1">純病假合計 (28日上限)</div>
+                            <span id="res-sick-only" class="highlight-val text-gray-900">0 日 0 時</span>
+                            <div class="mt-2 text-[11px] text-gray-400 font-medium italic">生理假前3日排除</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 最佳請假建議 -->
+                <div class="card p-5 border-t-4 border-yellow-500">
+                    <h2 class="text-lg font-bold mb-4 text-gray-800 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        統計 6：最佳請假建議 (完全不扣薪方案)
+                    </h2>
+                    <div id="advice-container" class="flex flex-col md:flex-row gap-4 overflow-x-auto pb-2">
+                        <p class="italic text-gray-400 text-center w-full">請點擊計算更新建議...</p>
+                    </div>
+                </div>
+
+                <!-- 法規摘要 -->
+                <div class="bg-white p-4 rounded-lg shadow-sm text-xs border">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-start">
+                            <span class="w-2 h-2 mt-1 rounded-full bg-green-500 mr-2 shrink-0"></span>
+                            <p><span class="font-bold text-green-700">支薪原則：</span>事假、家照、身心調適假三者合計不超過 7 日即不扣薪。</p>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="w-2 h-2 mt-1 rounded-full bg-orange-500 mr-2 shrink-0"></span>
+                            <p><span class="font-bold text-orange-600">考核原則：</span>家照假、身心調適假均不計入考核 14 日，對考績完全無影響。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getVal(id) {
+            return parseFloat(document.getElementById(id).value) || 0;
+        }
+
+        function formatDH(totalHours) {
+            const d = Math.floor(totalHours / 8);
+            const h = totalHours % 8;
+            return `${d} 日 ${h} 時`;
+        }
+
+        function calculate() {
+            // 輸入值
+            const casualH = (getVal('cas_d') * 8) + getVal('cas_h');
+            const sickH = (getVal('sick_d') * 8) + getVal('sick_h');
+            const mentalH = (getVal('men_d') * 8) + getVal('men_h');
+            const familyH = (getVal('fam_d') * 8) + getVal('fam_h');
+            const periodH = (getVal('per_d') * 8) + getVal('per_h');
+
+            // 1. 支薪事假合計 (一般事+家照+調適) -> 總上限 56小時 (7日)
+            const totalPayCasualH = casualH + familyH + mentalH;
+            
+            // 2. 生理假與病假紅利
+            const periodBonusH = Math.min(periodH, 24);
+            const periodToSickH = Math.max(0, periodH - 24);
+            const totalSickH = sickH + periodToSickH;
+
+            // 3. 考核核計 (僅 一般事假 + 病假)
+            const meritTotalH = casualH + totalSickH;
+
+            // 更新統計 UI
+            document.getElementById('res-pay-casual').innerText = formatDH(totalPayCasualH);
+            document.getElementById('res-merit-total').innerText = formatDH(meritTotalH);
+            document.getElementById('res-sick-only').innerText = formatDH(totalSickH);
+
+            const payStatus = document.getElementById('pay-status');
+            const isOverPayLimit = totalPayCasualH > 56;
+
+            if (!isOverPayLimit) {
+                payStatus.innerText = "✓ 薪給：目前不扣薪";
+                payStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-green-100 text-green-700 border border-green-200";
+            } else {
+                payStatus.innerText = "✕ 薪給：已開始扣薪";
+                payStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-red-100 text-red-700 border border-red-200";
+            }
+
+            const meritStatus = document.getElementById('merit-status');
+            if (meritTotalH <= 112 && totalSickH <= 224) {
+                meritStatus.innerText = "✓ 考核：符合4條1款";
+                meritStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-blue-100 text-blue-700 border border-blue-200";
+            } else {
+                meritStatus.innerText = "✕ 考核：超標警告";
+                meritStatus.className = "mt-2 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block bg-orange-100 text-orange-700 border border-orange-200";
+            }
+
+            // --- 最佳請假建議邏輯 ---
+            
+            // 7日不扣薪總空間 (56時)
+            const maxFreeH = 56;
+            
+            // A. 身心調適假建議 (法定上限 3日)
+            const remMentalLawH = Math.max(0, 24 - mentalH);
+            // 身心調適假雖然有補助，但併入事假計算。若總支薪事假已滿，請調適假也會扣薪。
+            const remMentalFreeH = Math.min(remMentalLawH, Math.max(0, maxFreeH - totalPayCasualH));
+            
+            // B. 家庭照顧假「不扣薪」建議額度
+            const remFamilyLawH = Math.max(0, 56 - familyH);
+            const remFamilyFreeH = Math.min(remFamilyLawH, Math.max(0, maxFreeH - totalPayCasualH));
+
+            // C. 生理假紅利
+            const remPeriodBonusH = Math.max(0, 24 - periodBonusH);
+
+            // D. 考核緩衝
+            const remMeritTotalH = Math.max(0, 112 - meritTotalH);
+
+            let adviceHtml = "";
+
+            // 建議 1: 身心調適假
+            if (remMentalFreeH > 0) {
+                adviceHtml += `
+                <div class="advice-box bg-green-50 border-green-200">
+                    <div>
+                        <span class="text-green-800 font-bold block mb-1 text-xs">🥇 第一優先：身心調適假</span>
+                        <span class="text-lg font-bold text-green-700">${formatDH(remMentalFreeH)}</span>
+                    </div>
+                    <p class="text-[10px] text-green-600 mt-2">不扣薪、不計考核且教育部補助代課費，最優選擇。</p>
+                </div>`;
+            } else if (remMentalLawH > 0) {
+                 adviceHtml += `
+                <div class="advice-box bg-red-50 border-red-200 text-red-800">
+                    <div>
+                        <span class="font-bold block mb-1 text-xs text-red-800">⚠️ 身心調適假：額外請假將扣薪</span>
+                    </div>
+                    <p class="text-[10px] mt-2">支薪事假總額(7日)已用盡。雖可再請身心調適假 ${formatDH(remMentalLawH)} 且<b>不計考核</b>，但會按日扣薪。</p>
+                </div>`;
+            }
+
+            // 建議 2: 家庭照顧假 (不扣薪精算版)
+            if (remFamilyFreeH > 0) {
+                adviceHtml += `
+                <div class="advice-box bg-purple-50 border-purple-200">
+                    <div>
+                        <span class="text-purple-800 font-bold block mb-1 text-xs">🥈 不扣薪首選：家照假</span>
+                        <span class="text-lg font-bold text-purple-700">${formatDH(remFamilyFreeH)}</span>
+                    </div>
+                    <p class="text-[10px] text-purple-600 mt-2">不計入考核。目前剩餘的不扣薪額度已扣除事假與調適假。</p>
+                </div>`;
+            } else if (familyH < 56) {
+                adviceHtml += `
+                <div class="advice-box bg-red-50 border-red-200 text-red-800">
+                    <div>
+                        <span class="font-bold block mb-1 text-xs text-red-800">⚠️ 家照假：額外請假將扣薪</span>
+                    </div>
+                    <p class="text-[10px] mt-2">支薪事假總額(7日)已用盡。雖不計考核，但會扣日薪。剩餘法定額度：${formatDH(remFamilyLawH)}</p>
+                </div>`;
+            }
+
+            // 建議 3: 生理假紅利
+            if (remPeriodBonusH > 0) {
+                adviceHtml += `
+                <div class="advice-box bg-pink-50 border-pink-200">
+                    <div>
+                        <span class="text-pink-800 font-bold block mb-1 text-xs">🥉 考核紅利：生理假</span>
+                        <span class="text-lg font-bold text-pink-700">${formatDH(remPeriodBonusH)}</span>
+                    </div>
+                    <p class="text-[10px] text-pink-600 mt-2">每月限1日。全學年前3日不併入病假，建議優先使用。</p>
+                </div>`;
+            }
+
+            // 建議 4: 考核緩衝
+            adviceHtml += `
+            <div class="advice-box bg-orange-50 border-orange-200">
+                <div>
+                    <span class="text-orange-800 font-bold block mb-1 text-xs">🛡️ 考核紅線餘額</span>
+                    <span class="text-lg font-bold text-orange-700">${formatDH(remMeritTotalH)}</span>
+                </div>
+                <p class="text-[10px] mt-2 text-orange-600">這是您剩餘可請的「一般事假 + 病假」考核空間。</p>
+            </div>`;
+
+            document.getElementById('advice-container').innerHTML = adviceHtml;
+        }
+
+        window.onload = calculate;
+    </script>
+</body>
+</html>
